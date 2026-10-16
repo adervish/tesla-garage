@@ -1,0 +1,4 @@
+Tesla Garage uses Tesla's Vehicle Command SDK under the Apache License 2.0.
+Source: https://github.com/teslamotors/vehicle-command
+Pinned commit: a4b43c1eff0e09d77deb9f2dce97031141fe8c8a
+The SDK is used as a dependency without modifying its source.

@@ -1,0 +1,18 @@
+{
+  "name": "tesla-garage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A local Tesla Fleet API dashboard with server-side OAuth.",
+  "engines": { "node": ">=22.16" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test",
+    "test:runtime": "node scripts/runtime-check.mjs",
+    "tesla:check": "node scripts/tesla.mjs check",
+    "tesla:keys": "node scripts/tesla.mjs keys",
+    "tesla:register": "node scripts/tesla.mjs register",
+    "deploy": "node scripts/deploy.mjs"
+  }
+}

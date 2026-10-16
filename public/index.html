@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Battery, range, charging, and vehicle status for your Tesla.">
+  <title>Tesla Garage</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Tesla Garage</a>
+    <div class="account"><span class="connection-status" id="connection-pill">Connecting…</span><button class="text-button" id="disconnect" hidden>Disconnect</button></div>
+  </header>
+
+  <main>
+    <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+    <div class="sample-notice" id="sample-notice" hidden><span>Sample data</span><button class="text-button" id="exit-preview">Exit preview</button></div>
+
+    <section class="connection" id="connection" aria-labelledby="connection-title">
+      <h1 id="connection-title">Your Tesla.</h1>
+      <p>Battery, charging, and vehicle status in one place.</p>
+      <div class="connection-actions"><a class="button primary" id="connect-button" href="#setup">Connect with Tesla</a><button class="text-button" id="preview-button">View sample</button></div>
+      <p class="connection-note">Sign in securely with Tesla. Vehicle information access only.</p>
+    </section>
+
+    <section id="dashboard" aria-labelledby="vehicle-name" hidden>
+      <div class="vehicle-heading">
+        <div class="vehicle-title"><p class="vehicle-model" id="vehicle-model">Your Tesla</p><h1 id="vehicle-name">Your vehicle</h1><p class="vehicle-status"><span id="vehicle-state">—</span><span id="lock-state" hidden>—</span></p></div>
+        <div class="vehicle-actions">
+          <div id="vehicle-picker-wrap" hidden><label class="sr-only" for="vehicle-picker">Select vehicle</label><select id="vehicle-picker"></select></div>
+          <button class="button primary" id="refresh-button" disabled>Refresh</button>
+          <button class="button secondary" id="wake-button" hidden>Wake</button>
+        </div>
+      </div>
+      <p id="empty-vehicles" class="muted" hidden>Check the vehicles shared with this app in your Tesla account, then reload the list.</p>
+      <div class="availability" id="availability" role="status" hidden></div>
+
+      <div id="readings">
+        <div class="metrics">
+          <article class="metric"><h2>Battery</h2><p class="metric-value"><span id="battery-value">—</span><span class="unit">%</span></p><progress id="battery-progress" max="100" value="0" aria-label="Battery level"></progress><p class="metric-note" id="battery-note">No reading yet</p></article>
+          <article class="metric"><h2>Range</h2><p class="metric-value"><span id="range-value">—</span><span class="unit" id="range-unit">mi</span></p><p class="metric-note">Estimated range</p></article>
+          <article class="metric"><h2>Charging</h2><p class="metric-value text-value" id="charging-value">—</p><p class="metric-note" id="charging-note">No reading yet</p></article>
+          <article class="metric"><h2>Cabin</h2><p class="metric-value"><span id="temperature-value">—</span><span class="unit" id="temperature-unit">°F</span></p><p class="metric-note" id="temperature-note">No reading yet</p></article>
+        </div>
+        <div class="refresh-info"><p id="updated-at" aria-live="polite">Refresh to get the latest readings.</p><p id="refresh-note">Updates on request. Sleeping vehicles stay asleep.</p></div>
+        <details class="vehicle-details" id="vehicle-details">
+          <summary>Vehicle details</summary>
+          <dl class="details-grid">
+            <div><dt>Odometer</dt><dd id="odometer-value">—</dd></div>
+            <div><dt>Sentry mode</dt><dd id="sentry-value">—</dd></div>
+            <div><dt>Software</dt><dd id="software-value">—</dd></div>
+            <div><dt>VIN</dt><dd id="vin-value">—</dd></div>
+            <div><dt>Outside temperature</dt><dd id="outside-value">—</dd></div>
+            <div><dt>Software update</dt><dd id="update-value">—</dd></div>
+          </dl>
+        </details>
+        <div class="feature-grid">
+          <details class="feature"><summary>Charging details</summary><dl class="details-grid">
+            <div><dt>Power</dt><dd id="power-value">—</dd></div><div><dt>Energy added</dt><dd id="energy-added-value">—</dd></div>
+            <div><dt>Voltage / current</dt><dd id="voltage-value">—</dd></div><div><dt>Requested current</dt><dd id="amps-value">—</dd></div>
+            <div><dt>Time remaining</dt><dd id="charge-time-value">—</dd></div><div><dt>Charge port</dt><dd id="port-value">—</dd></div>
+          </dl></details>
+          <details class="feature"><summary>Tires, doors, and windows</summary><dl class="details-grid">
+            <div><dt>Front left tire</dt><dd id="tire-fl">—</dd></div><div><dt>Front right tire</dt><dd id="tire-fr">—</dd></div>
+            <div><dt>Rear left tire</dt><dd id="tire-rl">—</dd></div><div><dt>Rear right tire</dt><dd id="tire-rr">—</dd></div>
+          </dl><p class="feature-note" id="openings-value">No door or window readings yet.</p></details>
+        </div>
+      </div>
+      <details class="feature" id="controls"><summary>Vehicle controls</summary>
+        <p class="feature-note" id="controls-note">Enable controls and pair this app’s key with your vehicle.</p>
+        <div class="action-row"><a class="button secondary" id="enable-controls" href="/auth/login?features=controls">Enable controls</a><a class="button secondary" id="pair-key" target="_blank" rel="noopener noreferrer">Pair vehicle key</a><button class="text-button" id="check-controls">Check setup</button></div>
+        <div class="control-groups" id="command-controls">
+          <div><h2>Charging</h2><div class="action-row"><button class="button secondary" data-command="charge_start">Start charging</button><button class="button secondary" data-command="charge_stop">Stop charging</button></div>
+            <form id="charge-limit-form"><label for="charge-limit">Charge limit (%)</label><div class="input-row"><input id="charge-limit" type="number" min="50" max="100" value="80" required><button class="button secondary" type="submit">Set limit</button></div></form>
+            <form id="charge-amps-form"><label for="charge-amps">Charging current (A)</label><div class="input-row"><input id="charge-amps" type="number" min="1" max="48" value="16" required><button class="button secondary" type="submit">Set current</button></div></form>
+          </div>
+          <div><h2>Climate</h2><div class="action-row"><button class="button secondary" data-command="auto_conditioning_start">Start climate</button><button class="button secondary" data-command="auto_conditioning_stop">Stop climate</button></div>
+            <form id="temperature-form"><label for="cabin-target">Cabin temperature (°C)</label><div class="input-row"><input id="cabin-target" type="number" min="15" max="28" step="0.5" value="21" required><button class="button secondary" type="submit">Set temperature</button></div></form>
+          </div>
+          <div><h2>Vehicle</h2><div class="action-row"><button class="button secondary" data-command="door_lock">Lock</button><button class="button secondary" data-command="door_unlock" data-confirm="Unlock this vehicle’s doors?">Unlock</button><button class="button secondary" data-command="flash_lights">Flash lights</button><button class="button secondary" data-command="honk_horn" data-confirm="Honk this vehicle’s horn?">Honk</button><button class="button secondary" data-command="charge_port_door_open">Open charge port</button><button class="button secondary" data-command="charge_port_door_close">Close charge port</button><button class="button secondary" data-command="set_sentry_mode" data-on="true">Sentry on</button><button class="button secondary" data-command="set_sentry_mode" data-on="false" data-confirm="Turn off Sentry mode for this vehicle?">Sentry off</button></div></div>
+        </div>
+      </details>
+      <details class="feature" id="history-panel"><summary>Saved readings</summary><p class="feature-note">Readings are recorded when you open or refresh the vehicle. Up to 200 are kept per vehicle during this connection. This is not continuous trip tracking.</p><div class="action-row"><button class="button secondary" id="load-history">Load history</button><button class="text-button" id="export-history" disabled>Download CSV</button></div><div id="history-content" class="history-content"></div></details>
+      <div class="feature-grid">
+        <details class="feature"><summary>Vehicle alerts</summary><button class="text-button" id="load-alerts">Load recent alerts</button><div id="alerts-content" class="record-list"></div></details>
+        <details class="feature"><summary>Software release notes</summary><button class="text-button" id="load-releases">Load release notes</button><div id="releases-content" class="record-list"></div></details>
+      </div>
+      <details class="feature"><summary>Location</summary><p class="feature-note" id="location-note">Enable location access, then refresh your vehicle.</p><a class="button secondary" id="enable-location" href="/auth/login?features=location">Enable location</a><a class="button secondary" id="location-link" target="_blank" rel="noopener noreferrer" hidden>Open in Maps</a></details>
+      <button class="text-button reload-button" id="reload-vehicles" hidden>Reload vehicle list</button>
+    </section>
+
+    <details class="feature" id="energy-panel" hidden><summary>Solar and Powerwall</summary><p class="feature-note">View solar generation, home use, battery charge, and grid status.</p><div class="action-row"><a class="button secondary" id="enable-energy" href="/auth/login?features=energy">Enable energy access</a><button class="text-button" id="load-energy">Load energy sites</button></div><div id="energy-content"></div></details>
+
+    <details class="setup" id="setup" hidden>
+      <summary>Connection settings</summary>
+      <div class="setup-content">
+        <p id="credentials-status">Checking credentials…</p>
+        <p id="key-status">Checking domain key…</p>
+        <p>In the <a href="https://developer.tesla.com/" target="_blank" rel="noopener noreferrer">Tesla developer portal</a>, use this app’s address as the allowed origin and the callback below as the allowed redirect URI. Enable Vehicle Information.</p>
+        <div class="callback-row"><code id="callback-url">—</code><button class="text-button" id="copy-callback">Copy</button></div>
+      </div>
+    </details>
+  </main>
+  <footer>Independent app · Tesla Fleet API</footer>
+</body>
+</html>
